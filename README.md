@@ -43,6 +43,19 @@ Tüm bitkileri bir arada gösteren bir galeri görünümü.
 
 Her bitkinin detaylarına kolayca ulaşılabilecek bir yapı.
 
+<table align="center">
+  <tr>
+    <td align="center"><b>Ana Ekran (Dashboard)</b></td>
+    <td align="center"><b>Bitki Detay Sayfası</b></td>
+    <td align="center"><b>Bitki Ekleme Ekranı</b></td>
+  </tr>
+  <tr>
+    <td><img src="images/Anasayfa.png" alt="Ana Ekran" width="250"/></td>
+    <td><img src="images/Bitki_Detay.png" alt="Bitki Detay Sayfası" width="250"/></td>
+    <td><img src="images/Bitki_Ekleme.png" alt="Bitki Ekleme Ekranı" width="250"/></td>
+  </tr>
+</table>
+
 Kullanılan Teknolojiler
 Bu projenin geliştirilmesinde aşağıdaki modern Android teknolojileri kullanılmaktadır:
 
