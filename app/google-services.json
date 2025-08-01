@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "504184218581",
+    "project_id": "growlistapp-4e171",
+    "storage_bucket": "growlistapp-4e171.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:504184218581:android:bef66d9c89096d4f08935c",
+        "android_client_info": {
+          "package_name": "com.talhasari.growlistapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZ7JMpowj6zKcPtWjMvYIjhCIWLPyno_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
