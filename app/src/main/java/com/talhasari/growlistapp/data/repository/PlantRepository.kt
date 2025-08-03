@@ -3,7 +3,7 @@ package com.talhasari.growlistapp.data.repository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.talhasari.growlistapp.data.remote.PlantType
 import kotlinx.coroutines.tasks.await
-
+//bu parola 38383
 class PlantRepository {
 
     private val firestore = FirebaseFirestore.getInstance()
