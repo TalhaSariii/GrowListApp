@@ -4,44 +4,58 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.talhasari.growlistapp.data.local.db.PlantDatabase
+import com.talhasari.growlistapp.data.local.db.entity.Plant
 import com.talhasari.growlistapp.data.remote.PlantType
 import com.talhasari.growlistapp.data.repository.PlantRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-sealed interface PlantTypesUiState {
-    object Loading : PlantTypesUiState
-    data class Success(val plantTypes: List<PlantType>) : PlantTypesUiState
-    data class Error(val message: String) : PlantTypesUiState
-}
 
+data class DashboardUiState(
+    val plantTypes: List<PlantType> = emptyList(),
+    val localPlants: List<Plant> = emptyList(),
+    val isLoading: Boolean = true
+)
 
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
 
     private val plantRepository: PlantRepository
 
-    private val _uiState = MutableStateFlow<PlantTypesUiState>(PlantTypesUiState.Loading)
-    val uiState: StateFlow<PlantTypesUiState> = _uiState.asStateFlow()
+
+    private val localPlantsFlow: StateFlow<List<Plant>>
+
+
+    private val plantTypesFlow: StateFlow<List<PlantType>>
+
+
+    val uiState: StateFlow<DashboardUiState>
 
     init {
-
         val plantDao = PlantDatabase.getDatabase(application).plantDao()
         plantRepository = PlantRepository(plantDao)
 
-        fetchPlantTypes()
-    }
 
-    private fun fetchPlantTypes() {
+        localPlantsFlow = plantRepository.getAllLocalPlants()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+
+        val typesFlow = MutableStateFlow<List<PlantType>>(emptyList())
         viewModelScope.launch {
-            _uiState.value = PlantTypesUiState.Loading
-            try {
-                val plantTypesFromRepo = plantRepository.getPlantTypes()
-                _uiState.value = PlantTypesUiState.Success(plantTypesFromRepo)
-            } catch (e: Exception) {
-                _uiState.value = PlantTypesUiState.Error("Bitki türleri alınamadı.")
-            }
+            typesFlow.value = plantRepository.getPlantTypes()
         }
+        plantTypesFlow = typesFlow
+
+
+        uiState = combine(localPlantsFlow, plantTypesFlow) { local, types ->
+            DashboardUiState(
+                plantTypes = types,
+                localPlants = local,
+                isLoading = false
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState(isLoading = true))
     }
 }

@@ -11,12 +11,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.talhasari.growlistapp.navigation.Screen
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,61 +26,59 @@ fun DashboardScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Bitki Ansiklopedisi") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
+            TopAppBar(title = { Text("GrowList") })
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(Screen.AddPlant.route) },
-                shape = FloatingActionButtonDefaults.extendedFabShape,
+                onClick = { navController.navigate(Screen.AddPlant.route) }
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Yeni Bitki Ekle")
             }
         }
     ) { innerPadding ->
-        when (val state = uiState) {
-            is PlantTypesUiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-            is PlantTypesUiState.Success -> {
-                if (state.plantTypes.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(innerPadding),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = "Gösterilecek bitki bulunamadı.")
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+
+                item {
+                    Text(text = "Benim Bitkilerim", style = MaterialTheme.typography.titleLarge)
+                }
+                if (uiState.localPlants.isEmpty()) {
+                    item {
+                        Text(text = "Henüz bir bitki eklemedin. '+' butonuyla ilk bitkini ekle!")
                     }
                 } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(innerPadding),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.plantTypes) { plantType ->
-                            PlantTypeCard(plantType = plantType) {
+                    items(uiState.localPlants) { plant ->
 
-
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text(text = plant.name, style = MaterialTheme.typography.titleMedium)
+                                Text(text = "${plant.type} - ${plant.location}", style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
                 }
-            }
-            is PlantTypesUiState.Error -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = state.message, color = Color.Red)
+
+
+                item {
+                    Text(text = "Bitki Ansiklopedisi", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 24.dp))
+                }
+                items(uiState.plantTypes) { plantType ->
+                    PlantTypeCard(plantType = plantType) {
+
+                    }
                 }
             }
         }

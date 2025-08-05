@@ -65,7 +65,7 @@ Platform: Android
 
 Arayüz (UI): Jetpack Compose
 
-Veritabanı: Room Persistence Library
+Veritabanı: Room Persistence Library,Cloud Firestore
 
 Asenkron İşlemler: Kotlin Coroutines
 
