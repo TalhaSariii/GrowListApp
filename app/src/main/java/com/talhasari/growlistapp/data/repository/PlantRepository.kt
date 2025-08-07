@@ -26,8 +26,6 @@ class PlantRepository(
     }
 
 
-
-
     fun getAllLocalPlants(): Flow<List<Plant>> {
         return plantDao.getAllPlants()
     }
@@ -40,5 +38,9 @@ class PlantRepository(
 
     suspend fun deleteLocalPlant(plant: Plant) {
         plantDao.deletePlant(plant)
+    }
+
+    suspend fun getPlantById(plantId: Int): Plant? {
+        return plantDao.getPlantById(plantId)
     }
 }

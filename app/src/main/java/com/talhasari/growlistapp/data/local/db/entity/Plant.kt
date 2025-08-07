@@ -11,5 +11,8 @@ data class Plant(
     val name: String,
     val type: String,
     val acquisitionDate: Long,
-    val location: String
+    val location: String,
+
+
+    val imageUrl: String? = null
 )

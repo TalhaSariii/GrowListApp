@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-
 data class AddPlantUiState(
     val plantTypes: List<PlantType> = emptyList(),
     val isLoading: Boolean = true,
@@ -33,7 +32,6 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         fetchPlantTypes()
     }
 
-
     private fun fetchPlantTypes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -42,8 +40,8 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-
-    fun savePlant(name: String, type: String, location: String) {
+    // --- BU FONKSİYONU GÜNCELLEDİK ---
+    fun savePlant(name: String, type: String, location: String, imageUrl: String?) { // imageUrl parametresi eklendi
         if (name.isBlank() || type.isBlank() || location.isBlank()) {
             _uiState.update { it.copy(userMessage = "Lütfen tüm alanları doldurun.") }
             return
@@ -54,13 +52,13 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                 name = name,
                 type = type,
                 location = location,
-                acquisitionDate = System.currentTimeMillis()
+                acquisitionDate = System.currentTimeMillis(),
+                imageUrl = imageUrl // Gelen imageUrl değeri buraya atandı
             )
             plantRepository.insertLocalPlant(newPlant)
             _uiState.update { it.copy(userMessage = "Bitki başarıyla kaydedildi!") }
         }
     }
-
 
     fun userMessageShown() {
         _uiState.update { it.copy(userMessage = null) }
