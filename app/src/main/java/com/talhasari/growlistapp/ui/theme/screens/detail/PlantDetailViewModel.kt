@@ -53,11 +53,25 @@ class PlantDetailViewModel(
     }
 
 
+    fun waterPlant() {
+        viewModelScope.launch {
+            uiState.value.plant?.let { currentPlant ->
+
+                val updatedPlant = currentPlant.copy(
+                    lastWateredDate = System.currentTimeMillis()
+                )
+
+                plantRepository.insertLocalPlant(updatedPlant)
+
+
+                _uiState.update { it.copy(plant = updatedPlant, userMessage = "Bitki sulandı!") }
+            }
+        }
+    }
 
     fun toggleEditMode() {
         _uiState.update { it.copy(isEditMode = !it.isEditMode) }
     }
-
 
     fun updatePlant(newName: String, newLocation: String) {
         if (newName.isBlank() || newLocation.isBlank()) {
@@ -91,7 +105,6 @@ class PlantDetailViewModel(
             }
         }
     }
-
 
     fun userMessageShown() {
         _uiState.update { it.copy(userMessage = null) }

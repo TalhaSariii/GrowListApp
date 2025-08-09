@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Yard
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -39,43 +41,47 @@ fun DashboardScreen(
             TopAppBar(title = { Text("Benim Bitkilerim") })
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.AddPlant.route) }
-            ) {
+            FloatingActionButton(onClick = { navController.navigate(Screen.AddPlant.route) }) {
                 Icon(Icons.Filled.Add, contentDescription = "Yeni Bitki Ekle")
             }
         }
     ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
-
-        if (uiState.localPlants.isEmpty()) {
-            // Liste boşsa gösterilecek ekran
-            Box(
-                modifier = Modifier.fillMaxSize().padding(innerPadding).padding(16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "Henüz bir bitki eklemedin. '+' butonuyla ilk bitkini ekle!")
+            if (uiState.plantsToWater.isNotEmpty()) {
+                item {
+                    SummaryCard(plantsToWater = uiState.plantsToWater)
+                }
             }
-        } else {
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(uiState.localPlants) { plant ->
+            if (uiState.allPlants.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier.fillParentMaxSize().padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Henüz bir bitki eklemedin. '+' butonuyla ilk bitkini ekle!")
+                    }
+                }
+            } else {
+                items(uiState.allPlants) { plant ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { navController.navigate(Screen.PlantDetail.createRoute(plant.id)) },
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+
                             Box(
                                 modifier = Modifier
                                     .size(64.dp)
@@ -108,6 +114,43 @@ fun DashboardScreen(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun SummaryCard(plantsToWater: List<com.talhasari.growlistapp.data.local.db.entity.Plant>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Bugün ${plantsToWater.size} bitki sulanacak",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Bugün Yapılacaklar",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            plantsToWater.forEach { plant ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.WaterDrop,
+                        contentDescription = "Sulama ikonu",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = "${plant.name} bitkisini sula", style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }

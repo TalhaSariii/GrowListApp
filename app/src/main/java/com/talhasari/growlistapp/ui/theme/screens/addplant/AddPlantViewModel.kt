@@ -40,20 +40,26 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // --- BU FONKSİYONU GÜNCELLEDİK ---
-    fun savePlant(name: String, type: String, location: String, imageUrl: String?) { // imageUrl parametresi eklendi
+
+    fun savePlant(name: String, type: String, location: String, imageUrl: String?) {
         if (name.isBlank() || type.isBlank() || location.isBlank()) {
             _uiState.update { it.copy(userMessage = "Lütfen tüm alanları doldurun.") }
             return
         }
 
         viewModelScope.launch {
+
+            val selectedPlantType = uiState.value.plantTypes.find { it.name == type }
+
+            val interval = selectedPlantType?.wateringIntervalDays ?: 7
+
             val newPlant = Plant(
                 name = name,
                 type = type,
                 location = location,
                 acquisitionDate = System.currentTimeMillis(),
-                imageUrl = imageUrl // Gelen imageUrl değeri buraya atandı
+                imageUrl = imageUrl,
+                wateringIntervalDays = interval
             )
             plantRepository.insertLocalPlant(newPlant)
             _uiState.update { it.copy(userMessage = "Bitki başarıyla kaydedildi!") }
