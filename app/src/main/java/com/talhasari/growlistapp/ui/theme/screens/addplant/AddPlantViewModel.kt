@@ -40,7 +40,6 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-
     fun savePlant(name: String, type: String, location: String, imageUrl: String?) {
         if (name.isBlank() || type.isBlank() || location.isBlank()) {
             _uiState.update { it.copy(userMessage = "Lütfen tüm alanları doldurun.") }
@@ -48,9 +47,7 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
 
         viewModelScope.launch {
-
             val selectedPlantType = uiState.value.plantTypes.find { it.name == type }
-
             val interval = selectedPlantType?.wateringIntervalDays ?: 7
 
             val newPlant = Plant(

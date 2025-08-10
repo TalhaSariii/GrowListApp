@@ -5,13 +5,15 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Yard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,8 +52,8 @@ fun AddPlantScreen(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
-            if (success) {
-
+            if (!success) {
+                imageUri = null
             }
         }
     )
@@ -67,10 +69,7 @@ fun AddPlantScreen(
                     file
                 )
                 imageUri = uri
-
-                uri?.let {
-                    cameraLauncher.launch(it)
-                }
+                uri?.let { cameraLauncher.launch(it) }
             } else {
                 scope.launch { snackbarHostState.showSnackbar("Kamera izni gerekli!") }
             }
@@ -91,7 +90,16 @@ fun AddPlantScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = { TopAppBar(title = { Text("Yeni Bitki Ekle") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Yeni Bitki Ekle") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri")
+                    }
+                }
+            )
+        }
     ) { innerPadding ->
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -102,38 +110,57 @@ fun AddPlantScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()), // Ekranın taşmasını önlemek için
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Spacer(modifier = Modifier.height(24.dp))
+
                 Box(
-                    modifier = Modifier
-                        .size(150.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .border(1.dp, Color.Gray, RoundedCornerShape(16.dp)),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.size(160.dp),
+                    contentAlignment = Alignment.BottomEnd
                 ) {
                     if (imageUri != null) {
                         Image(
                             painter = rememberAsyncImagePainter(imageUri),
                             contentDescription = "Çekilen Fotoğraf",
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
                     } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Yard,
+                                contentDescription = "Varsayılan Bitki İkonu",
+                                modifier = Modifier.size(60.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Kamera İkonu",
-                            modifier = Modifier.size(48.dp),
-                            tint = Color.Gray
+                            contentDescription = "Fotoğraf Çek",
+                            tint = Color.White
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
-                    Text("Fotoğraf Çek")
-                }
-                Spacer(modifier = Modifier.height(24.dp))
+
+                Spacer(modifier = Modifier.height(32.dp))
+
                 OutlinedTextField(
                     value = plantName,
                     onValueChange = { plantName = it },
@@ -141,6 +168,7 @@ fun AddPlantScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+
                 ExposedDropdownMenuBox(
                     expanded = isDropdownExpanded,
                     onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
@@ -170,6 +198,7 @@ fun AddPlantScreen(
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = plantLocation,
@@ -177,7 +206,9 @@ fun AddPlantScreen(
                     label = { Text("Konumu (Örn: Salon Penceresi)") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+
+                Spacer(modifier = Modifier.weight(1f))
+
                 Button(
                     onClick = {
                         addPlantViewModel.savePlant(
@@ -187,10 +218,12 @@ fun AddPlantScreen(
                             imageUrl = imageUri?.toString()
                         )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                     contentPadding = PaddingValues(vertical = 16.dp)
                 ) {
-                    Text(text = "Kaydet")
+                    Text(text = "Kaydet", style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
