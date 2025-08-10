@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Yard
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -46,6 +47,9 @@ fun AddPlantScreen(
     var plantLocation by remember { mutableStateOf("") }
     var selectedPlantType by remember { mutableStateOf<String?>(null) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
+
+
+    var plantTypeInputText by remember { mutableStateOf("") }
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -116,6 +120,7 @@ fun AddPlantScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
+
                 Box(
                     modifier = Modifier.size(160.dp),
                     contentAlignment = Alignment.BottomEnd
@@ -169,35 +174,49 @@ fun AddPlantScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
+
                 ExposedDropdownMenuBox(
-                    expanded = isDropdownExpanded,
-                    onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
+                    expanded = isDropdownExpanded && uiState.filteredPlantTypes.isNotEmpty(),
+                    onExpandedChange = { isDropdownExpanded = !it }
                 ) {
                     OutlinedTextField(
-                        value = selectedPlantType ?: "Bir bitki türü seçin",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Bitki Türü") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded) },
+                        value = plantTypeInputText,
+                        onValueChange = { newText ->
+                            plantTypeInputText = newText
+                            addPlantViewModel.onSearchQueryChanged(newText)
+                            isDropdownExpanded = newText.isNotEmpty() // sadece yazı varsa aç
+                        },
+                        label = { Text("Bitki Türünü Ara veya Seç") },
+                        trailingIcon = { Icon(Icons.Default.Search, contentDescription = "Ara") },
+                        singleLine = true,
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth()
                     )
-                    ExposedDropdownMenu(
-                        expanded = isDropdownExpanded,
-                        onDismissRequest = { isDropdownExpanded = false }
-                    ) {
-                        uiState.plantTypes.forEach { plantType ->
-                            DropdownMenuItem(
-                                text = { Text(plantType.name) },
-                                onClick = {
-                                    selectedPlantType = plantType.name
-                                    isDropdownExpanded = false
-                                }
-                            )
+
+                    if (uiState.filteredPlantTypes.isNotEmpty() && isDropdownExpanded) {
+                        ExposedDropdownMenu(
+                            expanded = true,
+                            onDismissRequest = {
+                                isDropdownExpanded = false
+                            }
+                        ) {
+                            uiState.filteredPlantTypes.forEach { plantType ->
+                                DropdownMenuItem(
+                                    text = { Text(plantType.name) },
+                                    onClick = {
+                                        selectedPlantType = plantType.name
+                                        plantTypeInputText = plantType.name
+                                        addPlantViewModel.onSearchQueryChanged("")
+                                        isDropdownExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
+
+
 
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(

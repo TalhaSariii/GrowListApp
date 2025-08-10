@@ -14,7 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class AddPlantUiState(
-    val plantTypes: List<PlantType> = emptyList(),
+    val allPlantTypes: List<PlantType> = emptyList(),
+    val filteredPlantTypes: List<PlantType> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = true,
     val userMessage: String? = null
 )
@@ -36,7 +38,20 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val types = plantRepository.getPlantTypes()
-            _uiState.update { it.copy(plantTypes = types, isLoading = false) }
+            _uiState.update { it.copy(allPlantTypes = types, filteredPlantTypes = types, isLoading = false) }
+        }
+    }
+
+    fun onSearchQueryChanged(query: String) {
+        _uiState.update { currentState ->
+            val filteredList = if (query.isBlank()) {
+                currentState.allPlantTypes
+            } else {
+                currentState.allPlantTypes.filter { plantType ->
+                    plantType.name.contains(query, ignoreCase = true)
+                }
+            }
+            currentState.copy(searchQuery = query, filteredPlantTypes = filteredList)
         }
     }
 
@@ -47,7 +62,7 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
 
         viewModelScope.launch {
-            val selectedPlantType = uiState.value.plantTypes.find { it.name == type }
+            val selectedPlantType = uiState.value.allPlantTypes.find { it.name == type }
             val interval = selectedPlantType?.wateringIntervalDays ?: 7
 
             val newPlant = Plant(

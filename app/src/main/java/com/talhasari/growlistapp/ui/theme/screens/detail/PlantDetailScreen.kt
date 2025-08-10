@@ -1,35 +1,32 @@
 package com.talhasari.growlistapp.ui.theme.screens.detail
 
-import android.net.Uri
-import androidx.compose.foundation.Image
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material.icons.filled.Yard
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
 import com.talhasari.growlistapp.data.local.db.entity.Plant
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -39,24 +36,13 @@ fun PlantDetailScreen(
     navController: NavController,
     plantDetailViewModel: PlantDetailViewModel = viewModel()
 ) {
+
     val uiState by plantDetailViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(key1 = uiState.userMessage) {
-        uiState.userMessage?.let { message ->
-            scope.launch {
-                snackbarHostState.showSnackbar(message)
-                plantDetailViewModel.userMessageShown()
-            }
-        }
-    }
-
-    LaunchedEffect(key1 = uiState.plantDeleted) {
-        if (uiState.plantDeleted) {
-            navController.popBackStack()
-        }
-    }
+    LaunchedEffect(key1 = uiState.userMessage) { /*...*/ }
+    LaunchedEffect(key1 = uiState.plantDeleted) { /*...*/ }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -92,6 +78,7 @@ fun PlantDetailScreen(
                     Text(text = uiState.error!!, color = Color.Red, modifier = Modifier.align(Alignment.Center))
                 }
                 uiState.plant != null -> {
+                    // PlantDetails'e ViewModel'i de gönderiyoruz
                     PlantDetails(
                         plant = uiState.plant!!,
                         isEditMode = uiState.isEditMode,
@@ -113,60 +100,77 @@ fun PlantDetails(
     onUpdateClick: (String, String) -> Unit,
     onWaterPlantClick: () -> Unit
 ) {
-    val dateFormatter = remember { SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale.getDefault()) }
-    val acquisitionDateFormatted = dateFormatter.format(Date(plant.acquisitionDate))
-    val lastWateredDateFormatted = plant.lastWateredDate?.let {
-        dateFormatter.format(Date(it))
-    } ?: "Hiç sulanmadı"
+    val acquisitionDateFormatted = remember(plant.acquisitionDate) {
+        SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date(plant.acquisitionDate))
+    }
+    val lastWateredDateFormatted = remember(plant.lastWateredDate) {
+        plant.lastWateredDate?.let {
+            SimpleDateFormat("dd MMMM yyyy, HH:mm", Locale.getDefault()).format(Date(it))
+        } ?: "Hiç sulanmadı"
+    }
+
+
+    var editedName by remember(plant.name) { mutableStateOf(plant.name) }
+    var editedLocation by remember(plant.location) { mutableStateOf(plant.location) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 16.dp), // Dikey boşluk
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp)
-                .clip(RoundedCornerShape(16.dp)),
-            contentAlignment = Alignment.Center
+
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+
+        Column(
+            modifier = Modifier.padding(horizontal = 24.dp), // Yatay boşluk
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (plant.imageUrl != null) {
-                Image(
-                    painter = rememberAsyncImagePainter(model = Uri.parse(plant.imageUrl)),
-                    contentDescription = plant.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+            if (isEditMode) {
+
+                OutlinedTextField(
+                    value = editedName,
+                    onValueChange = { editedName = it },
+                    label = { Text("Bitki Adı") },
+                    modifier = Modifier.fillMaxWidth()
                 )
+                OutlinedTextField(
+                    value = editedLocation,
+                    onValueChange = { editedLocation = it },
+                    label = { Text("Konumu") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { onUpdateClick(editedName, editedLocation) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Değişiklikleri Kaydet")
+                }
             } else {
-                Icon(Icons.Default.Yard, "Varsayılan Bitki İkonu", modifier = Modifier.size(100.dp), tint = Color.LightGray)
+
+                InfoCard(icon = Icons.Default.Yard, label = "Türü", value = plant.type)
+                InfoCard(icon = Icons.Default.LocationOn, label = "Konumu", value = plant.location)
+                InfoCard(icon = Icons.Default.CalendarToday, label = "Edinme Tarihi", value = acquisitionDateFormatted)
+                InfoCard(icon = Icons.Default.WaterDrop, label = "Son Sulanma", value = lastWateredDateFormatted)
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
 
-        Button(
-            onClick = onWaterPlantClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(Icons.Default.WaterDrop, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
-            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-            Text("Şimdi Sula")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        if (isEditMode) {
-
-        } else {
-            Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                DetailRow(label = "Bitki Adı", value = plant.name)
-                DetailRow(label = "Türü", value = plant.type)
-                DetailRow(label = "Konumu", value = plant.location)
-                DetailRow(label = "Edinme Tarihi", value = acquisitionDateFormatted)
-                DetailRow(label = "Son Sulanma Tarihi", value = lastWateredDateFormatted)
+        if (!isEditMode) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(
+                onClick = onWaterPlantClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
+                Icon(Icons.Default.WaterDrop, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text("Şimdi Sula")
             }
         }
     }
@@ -174,16 +178,35 @@ fun PlantDetails(
 
 
 @Composable
-fun DetailRow(label: String, value: String) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge
-        )
+fun InfoCard(icon: ImageVector, label: String, value: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
     }
 }
