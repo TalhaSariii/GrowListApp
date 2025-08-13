@@ -88,4 +88,6 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
 
     implementation("androidx.compose.material:material-icons-extended:1.6.8")
+
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
 }

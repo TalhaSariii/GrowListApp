@@ -12,7 +12,20 @@
           "package_name": "com.talhasari.growlistapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "504184218581-84gk18nfeo319slpoejifhs68ljnhusa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.talhasari.growlistapp",
+            "certificate_hash": "20e4cce7b7aedb0754014c0e2ded1f2ac7d1909a"
+          }
+        },
+        {
+          "client_id": "504184218581-9ee3q7v4jqf6k7rdi352o1rghsbhaf78.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBZ7JMpowj6zKcPtWjMvYIjhCIWLPyno_4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "504184218581-9ee3q7v4jqf6k7rdi352o1rghsbhaf78.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -30,7 +30,7 @@ fun OnboardingScreen(navController: NavController) {
 
         Button(onClick = {
 
-            navController.navigate(Screen.Dashboard.route) {
+            navController.navigate(Screen.Main.route) {
                 popUpTo(Screen.Onboarding.route) {
                     inclusive = true
                 }

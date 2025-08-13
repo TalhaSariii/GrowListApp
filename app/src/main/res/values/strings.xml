@@ -1,3 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GrowListApp</string>
+
+    <string name="default_web_client_id">504184218581-9ee3q7v4jqf6k7rdi352o1rghsbhaf78.apps.googleusercontent.com</string>
 </resources>
