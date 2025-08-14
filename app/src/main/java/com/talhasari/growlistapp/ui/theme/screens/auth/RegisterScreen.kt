@@ -1,62 +1,42 @@
 package com.talhasari.growlistapp.ui.theme.screens.auth
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.talhasari.growlistapp.R
 import com.talhasari.growlistapp.navigation.Screen
-import kotlinx.coroutines.launch
+
 
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     navController: NavController,
-    loginViewModel: LoginViewModel = viewModel()
+    registerViewModel: RegisterViewModel = viewModel()
 ) {
-    val uiState by loginViewModel.uiState.collectAsState()
+    val uiState by registerViewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = { result ->
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)!!
-                val idToken = account.idToken!!
-                loginViewModel.signInWithGoogle(idToken)
-            } catch (e: ApiException) {
-                scope.launch { snackbarHostState.showSnackbar("Google ile giriş yapılamadı.") }
-            }
-        }
-    )
 
     LaunchedEffect(key1 = uiState) {
-        if (uiState.isSignInSuccessful) {
+        if (uiState.isRegistrationSuccessful) {
+
             navController.navigate(Screen.Main.route) {
                 popUpTo(0)
             }
         }
-        uiState.signInError?.let { error ->
+        uiState.registrationError?.let { error ->
             snackbarHostState.showSnackbar(error)
-            loginViewModel.errorShown()
+            registerViewModel.errorShown()
         }
     }
 
@@ -69,7 +49,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Tekrar Hoş Geldin!", style = MaterialTheme.typography.headlineMedium)
+            Text("Hesap Oluştur", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
@@ -92,35 +72,18 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { loginViewModel.signInWithEmailAndPassword(email, password) },
+                onClick = { registerViewModel.createUserWithEmailAndPassword(email, password) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                 } else {
-                    Text("Giriş Yap")
+                    Text("Kayıt Ol")
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken(context.getString(R.string.default_web_client_id))
-                        .requestEmail()
-                        .build()
-                    val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                    googleSignInLauncher.launch(googleSignInClient.signInIntent)
-                },
-                enabled = !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-            ) {
-                Text("Google ile Devam Et")
-            }
-
-            TextButton(onClick = { navController.navigate(Screen.Register.route) }) {
-                Text("Hesabın yok mu? Kayıt Ol")
+            TextButton(onClick = { navController.navigate(Screen.Login.route) }) {
+                Text("Zaten bir hesabın var mı? Giriş Yap")
             }
         }
     }

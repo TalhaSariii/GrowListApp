@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.talhasari.growlistapp.ui.theme.screens.addplant.AddPlantScreen
 import com.talhasari.growlistapp.ui.theme.screens.auth.LoginScreen
+import com.talhasari.growlistapp.ui.theme.screens.auth.RegisterScreen
 import com.talhasari.growlistapp.ui.theme.screens.detail.PlantDetailScreen
 import com.talhasari.growlistapp.ui.theme.screens.main.MainScreen
 import com.talhasari.growlistapp.ui.theme.screens.onboarding.OnboardingScreen
@@ -33,6 +34,10 @@ fun AppNavigation() {
        
         composable(route = Screen.Login.route) {
             LoginScreen(navController = navController)
+        }
+
+        composable(route = Screen.Register.route) {
+            RegisterScreen(navController = navController)
         }
 
         composable(route = Screen.Main.route) {

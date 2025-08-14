@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class SplashViewModel(application: Application) : AndroidViewModel(application) {
-    private val authRepository = AuthRepository()
+    private val authRepository = AuthRepository(application)
 
     private val _isUserLoggedIn = MutableStateFlow<Boolean?>(null)
     val isUserLoggedIn: StateFlow<Boolean?> = _isUserLoggedIn.asStateFlow()
