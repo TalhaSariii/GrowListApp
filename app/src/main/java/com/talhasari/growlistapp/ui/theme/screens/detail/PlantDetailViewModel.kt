@@ -20,7 +20,7 @@ data class PlantDetailUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val plantDeleted: Boolean = false,
-    val isEditMode: Boolean = false,
+    val isEditDialogOpen: Boolean = false,
     val userMessage: String? = null,
     val wateringTimeRemaining: String = "",
     val fertilizingTimeRemaining: String = ""
@@ -72,7 +72,7 @@ class PlantDetailViewModel(
             uiState.value.plant?.let { currentPlant ->
                 val updatedPlant = currentPlant.copy(lastWateredDate = System.currentTimeMillis())
                 plantRepository.insertLocalPlant(updatedPlant)
-                updateUiWithPlant(updatedPlant) // UI'ı yeni verilerle güncelle
+                updateUiWithPlant(updatedPlant)
                 _uiState.update { it.copy(userMessage = "Bitki sulandı!") }
             }
         }
@@ -83,16 +83,23 @@ class PlantDetailViewModel(
             uiState.value.plant?.let { currentPlant ->
                 val updatedPlant = currentPlant.copy(lastFertilizedDate = System.currentTimeMillis())
                 plantRepository.insertLocalPlant(updatedPlant)
-                updateUiWithPlant(updatedPlant) // UI'ı yeni verilerle güncelle
+                updateUiWithPlant(updatedPlant)
                 _uiState.update { it.copy(userMessage = "Bitki gübrelendi!") }
             }
         }
     }
 
-    fun toggleEditMode() {
-        _uiState.update { it.copy(isEditMode = !it.isEditMode) }
+    // YENİ EKLENDİ: Düzenleme diyalogunu açar
+    fun openEditDialog() {
+        _uiState.update { it.copy(isEditDialogOpen = true) }
     }
 
+    // YENİ EKLENDİ: Düzenleme diyalogunu kapatır
+    fun closeEditDialog() {
+        _uiState.update { it.copy(isEditDialogOpen = false) }
+    }
+
+    // GÜNCELLENDİ: Artık diyalogu da kapatıyor
     fun updatePlant(newName: String, newLocation: String) {
         if (newName.isBlank() || newLocation.isBlank()) {
             _uiState.update { it.copy(userMessage = "İsim ve konum boş bırakılamaz.") }
@@ -109,7 +116,7 @@ class PlantDetailViewModel(
                 updateUiWithPlant(updatedPlant)
                 _uiState.update {
                     it.copy(
-                        isEditMode = false,
+                        isEditDialogOpen = false,
                         userMessage = "Bitki güncellendi!"
                     )
                 }

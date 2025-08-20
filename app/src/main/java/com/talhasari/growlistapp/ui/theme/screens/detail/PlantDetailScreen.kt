@@ -62,7 +62,8 @@ fun PlantDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* TODO: Edit Screen Navigation */ }) {
+                    // Butonun onClick'i güncellendi
+                    IconButton(onClick = { plantDetailViewModel.openEditDialog() }) {
                         Icon(Icons.Default.Edit, "Bitkiyi Düzenle")
                     }
                     IconButton(onClick = { plantDetailViewModel.deletePlant() }) {
@@ -78,7 +79,7 @@ fun PlantDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()) // Sadece üst padding'i uygula
+                .padding(top = innerPadding.calculateTopPadding())
         ) {
             when {
                 uiState.isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -103,11 +104,68 @@ fun PlantDetails(
     val plant = uiState.plant!!
     val scrollState = rememberScrollState()
 
+    // Diyalog penceresi burada state'e göre gösterilecek
+    if (uiState.isEditDialogOpen) {
+        EditPlantDialog(
+            plant = plant,
+            onDismiss = { viewModel.closeEditDialog() },
+            onSave = { newName, newLocation ->
+                viewModel.updatePlant(newName, newLocation)
+            }
+        )
+    }
+
     Column(modifier = Modifier.verticalScroll(scrollState)) {
         Header(plant = plant)
         InfoTabs(uiState = uiState, viewModel = viewModel)
     }
 }
+
+// YENİ EKLENDİ: Düzenleme için diyalog penceresi
+@Composable
+fun EditPlantDialog(
+    plant: Plant,
+    onDismiss: () -> Unit,
+    onSave: (String, String) -> Unit
+) {
+    var name by remember(plant.name) { mutableStateOf(plant.name) }
+    var location by remember(plant.location) { mutableStateOf(plant.location) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Bitkiyi Düzenle") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Bitkinin Adı") },
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = { location = it },
+                    label = { Text("Konumu") },
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(name, location) },
+                enabled = name.isNotBlank() && location.isNotBlank()
+            ) {
+                Text("Kaydet")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("İptal")
+            }
+        }
+    )
+}
+
 
 @Composable
 fun Header(plant: Plant) {
@@ -123,7 +181,6 @@ fun Header(plant: Plant) {
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        // Yazının okunabilirliği için gradient
         Box(
             modifier = Modifier
                 .fillMaxSize()
