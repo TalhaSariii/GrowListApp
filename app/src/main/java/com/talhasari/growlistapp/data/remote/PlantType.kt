@@ -7,5 +7,11 @@ data class PlantType(
     val imageUrl: String = "",
     val wateringIntervalDays: Int = 7,
     val lightRequirement: String = "",
-    val humidityRequirement: String = ""
+    val humidityRequirement: String = "",
+    val generalInfo: String = "",
+    val difficultyLevel: String = "",
+    val temperatureRange: String = "",
+    val fertilizationFrequency: String = "",
+    val pruningFrequency: String = "",
+    val repottingFrequency: String = ""
 )

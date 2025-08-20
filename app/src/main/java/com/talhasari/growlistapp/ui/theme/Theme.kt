@@ -14,20 +14,21 @@ import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
     primary = VibrantGreen,
-    secondary = VibrantGreen,
+    secondary = VibrantGreen, // FAB butonu gibi ikincil elemanlar da canlı yeşil olsun
     background = LightGreenBackground,
-    surface = CardBackground,
+    surface = CardBackground, // Kartların arka planı
     onPrimary = Color.White,
     onSecondary = Color.White,
     onBackground = DarkText,
     onSurface = DarkText,
     onSurfaceVariant = LightText,
-    primaryContainer = LightGreenBackground,
+    primaryContainer = SurfaceVariantGreen, // Sulama özet kartının arka planı
     onPrimaryContainer = DarkText,
+    surfaceVariant = SurfaceVariantGreen, // Varsayılan resim arka planı gibi yüzeyler için
 
-
-    secondaryContainer = VibrantGreen.copy(alpha = 0.2f),
-    onSecondaryContainer = VibrantGreen
+    // Navigasyon Bar Renkleri
+    secondaryContainer = VibrantGreen.copy(alpha = 0.2f), // Seçili sekmenin arka planı
+    onSecondaryContainer = VibrantGreen // Seçili sekmenin ikonu
 )
 
 @Composable
@@ -40,7 +41,7 @@ fun GrowListAppTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-
+            // Durum çubuğunun rengini de ana arka plan rengimizle aynı yapalım
             window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }

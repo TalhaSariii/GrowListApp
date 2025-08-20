@@ -7,12 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.talhasari.growlistapp.data.local.db.PlantDatabase
 import com.talhasari.growlistapp.data.local.db.entity.Plant
 import com.talhasari.growlistapp.data.repository.PlantRepository
+import com.talhasari.growlistapp.utils.formatTimeRemaining
+import com.talhasari.growlistapp.utils.frequencyToDays
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
 
 data class PlantDetailUiState(
     val plant: Plant? = null,
@@ -20,7 +21,9 @@ data class PlantDetailUiState(
     val error: String? = null,
     val plantDeleted: Boolean = false,
     val isEditMode: Boolean = false,
-    val userMessage: String? = null
+    val userMessage: String? = null,
+    val wateringTimeRemaining: String = "",
+    val fertilizingTimeRemaining: String = ""
 )
 
 class PlantDetailViewModel(
@@ -43,28 +46,45 @@ class PlantDetailViewModel(
     private fun fetchPlantDetails() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val plant = plantRepository.getPlantById(plantId)
-            if (plant != null) {
-                _uiState.update { it.copy(plant = plant, isLoading = false) }
-            } else {
-                _uiState.update { it.copy(error = "Bitki bulunamadı.", isLoading = false) }
-            }
+            plantRepository.getPlantById(plantId)?.let { plant ->
+                updateUiWithPlant(plant)
+            } ?: _uiState.update { it.copy(error = "Bitki bulunamadı.", isLoading = false) }
         }
     }
 
+    private fun updateUiWithPlant(plant: Plant) {
+        val wateringTime = formatTimeRemaining(plant.lastWateredDate, plant.wateringIntervalDays)
+        val fertilizingDays = frequencyToDays(plant.fertilizationFrequency)
+        val fertilizingTime = formatTimeRemaining(plant.lastFertilizedDate, fertilizingDays)
+
+        _uiState.update {
+            it.copy(
+                plant = plant,
+                isLoading = false,
+                wateringTimeRemaining = wateringTime,
+                fertilizingTimeRemaining = fertilizingTime
+            )
+        }
+    }
 
     fun waterPlant() {
         viewModelScope.launch {
             uiState.value.plant?.let { currentPlant ->
-
-                val updatedPlant = currentPlant.copy(
-                    lastWateredDate = System.currentTimeMillis()
-                )
-
+                val updatedPlant = currentPlant.copy(lastWateredDate = System.currentTimeMillis())
                 plantRepository.insertLocalPlant(updatedPlant)
+                updateUiWithPlant(updatedPlant) // UI'ı yeni verilerle güncelle
+                _uiState.update { it.copy(userMessage = "Bitki sulandı!") }
+            }
+        }
+    }
 
-
-                _uiState.update { it.copy(plant = updatedPlant, userMessage = "Bitki sulandı!") }
+    fun fertilizePlant() {
+        viewModelScope.launch {
+            uiState.value.plant?.let { currentPlant ->
+                val updatedPlant = currentPlant.copy(lastFertilizedDate = System.currentTimeMillis())
+                plantRepository.insertLocalPlant(updatedPlant)
+                updateUiWithPlant(updatedPlant) // UI'ı yeni verilerle güncelle
+                _uiState.update { it.copy(userMessage = "Bitki gübrelendi!") }
             }
         }
     }
@@ -86,9 +106,9 @@ class PlantDetailViewModel(
                     location = newLocation
                 )
                 plantRepository.insertLocalPlant(updatedPlant)
+                updateUiWithPlant(updatedPlant)
                 _uiState.update {
                     it.copy(
-                        plant = updatedPlant,
                         isEditMode = false,
                         userMessage = "Bitki güncellendi!"
                     )

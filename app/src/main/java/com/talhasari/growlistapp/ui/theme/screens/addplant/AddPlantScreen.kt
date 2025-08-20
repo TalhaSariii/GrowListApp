@@ -28,6 +28,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.talhasari.growlistapp.data.remote.PlantType
 import com.talhasari.growlistapp.utils.createImageFile
 import kotlinx.coroutines.launch
 import java.util.*
@@ -45,11 +46,11 @@ fun AddPlantScreen(
 
     var plantName by remember { mutableStateOf("") }
     var plantLocation by remember { mutableStateOf("") }
-    var selectedPlantType by remember { mutableStateOf<String?>(null) }
-    var isDropdownExpanded by remember { mutableStateOf(false) }
 
-
+    // Seçilen bitki türünü artık bir nesne olarak tutuyoruz
+    var selectedPlantType by remember { mutableStateOf<PlantType?>(null) }
     var plantTypeInputText by remember { mutableStateOf("") }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -57,6 +58,7 @@ fun AddPlantScreen(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
             if (!success) {
+                // Fotoğraf çekme iptal edilirse URI'yi temizle
                 imageUri = null
             }
         }
@@ -73,7 +75,7 @@ fun AddPlantScreen(
                     file
                 )
                 imageUri = uri
-                uri?.let { cameraLauncher.launch(it) }
+                cameraLauncher.launch(uri)
             } else {
                 scope.launch { snackbarHostState.showSnackbar("Kamera izni gerekli!") }
             }
@@ -120,18 +122,18 @@ fun AddPlantScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-
                 Box(
                     modifier = Modifier.size(160.dp),
                     contentAlignment = Alignment.BottomEnd
                 ) {
+                    val painter = rememberAsyncImagePainter(
+                        model = imageUri ?: com.talhasari.growlistapp.R.drawable.ic_launcher_background // Varsayılan bir resim ekleyebilirsin
+                    )
                     if (imageUri != null) {
                         Image(
-                            painter = rememberAsyncImagePainter(imageUri),
+                            painter = painter,
                             contentDescription = "Çekilen Fotoğraf",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(CircleShape),
+                            modifier = Modifier.fillMaxSize().clip(CircleShape),
                             contentScale = ContentScale.Crop
                         )
                     } else {
@@ -170,23 +172,24 @@ fun AddPlantScreen(
                     value = plantName,
                     onValueChange = { plantName = it },
                     label = { Text("Bitkinin Adı (Örn: Yeşil Dostum)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
                 Spacer(modifier = Modifier.height(16.dp))
 
-
                 ExposedDropdownMenuBox(
-                    expanded = isDropdownExpanded && uiState.filteredPlantTypes.isNotEmpty(),
-                    onExpandedChange = { isDropdownExpanded = !it }
+                    expanded = isDropdownExpanded,
+                    onExpandedChange = { isDropdownExpanded = !isDropdownExpanded }
                 ) {
                     OutlinedTextField(
                         value = plantTypeInputText,
                         onValueChange = { newText ->
                             plantTypeInputText = newText
                             addPlantViewModel.onSearchQueryChanged(newText)
-                            isDropdownExpanded = newText.isNotEmpty() // sadece yazı varsa aç
+                            isDropdownExpanded = true
+                            selectedPlantType = null // Kullanıcı yeni arama yaparsa seçimi sıfırla
                         },
-                        label = { Text("Bitki Türünü Ara veya Seç") },
+                        label = { Text("Bitki Türünü Ara") },
                         trailingIcon = { Icon(Icons.Default.Search, contentDescription = "Ara") },
                         singleLine = true,
                         modifier = Modifier
@@ -194,18 +197,16 @@ fun AddPlantScreen(
                             .fillMaxWidth()
                     )
 
-                    if (uiState.filteredPlantTypes.isNotEmpty() && isDropdownExpanded) {
+                    if (uiState.filteredPlantTypes.isNotEmpty()) {
                         ExposedDropdownMenu(
-                            expanded = true,
-                            onDismissRequest = {
-                                isDropdownExpanded = false
-                            }
+                            expanded = isDropdownExpanded,
+                            onDismissRequest = { isDropdownExpanded = false }
                         ) {
                             uiState.filteredPlantTypes.forEach { plantType ->
                                 DropdownMenuItem(
-                                    text = { Text(plantType.name) },
+                                    text = { Text("${plantType.name} (${plantType.scientificName})") },
                                     onClick = {
-                                        selectedPlantType = plantType.name
+                                        selectedPlantType = plantType
                                         plantTypeInputText = plantType.name
                                         addPlantViewModel.onSearchQueryChanged("")
                                         isDropdownExpanded = false
@@ -216,14 +217,13 @@ fun AddPlantScreen(
                     }
                 }
 
-
-
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = plantLocation,
                     onValueChange = { plantLocation = it },
                     label = { Text("Konumu (Örn: Salon Penceresi)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -232,11 +232,13 @@ fun AddPlantScreen(
                     onClick = {
                         addPlantViewModel.savePlant(
                             name = plantName,
-                            type = selectedPlantType ?: "",
+                            selectedPlantType = selectedPlantType,
                             location = plantLocation,
                             imageUrl = imageUri?.toString()
                         )
                     },
+
+                    enabled = plantName.isNotBlank() && plantLocation.isNotBlank() && selectedPlantType != null,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
