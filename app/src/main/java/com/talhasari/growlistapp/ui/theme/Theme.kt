@@ -13,17 +13,22 @@ import androidx.core.view.WindowCompat
 
 
 private val LightColorScheme = lightColorScheme(
-    primary = DarkGreen,
-    secondary = SoftGreen,
-    background = OffWhite,
-    surface = Color.White,
+    primary = VibrantGreen,
+    secondary = VibrantGreen,
+    background = LightGreenBackground,
+    surface = CardBackground,
     onPrimary = Color.White,
-    onSecondary = TextColor,
-    onBackground = TextColor,
-    onSurface = TextColor,
-    onSurfaceVariant = TextColorVariant
-)
+    onSecondary = Color.White,
+    onBackground = DarkText,
+    onSurface = DarkText,
+    onSurfaceVariant = LightText,
+    primaryContainer = LightGreenBackground,
+    onPrimaryContainer = DarkText,
 
+
+    secondaryContainer = VibrantGreen.copy(alpha = 0.2f),
+    onSecondaryContainer = VibrantGreen
+)
 
 @Composable
 fun GrowListAppTheme(
@@ -35,7 +40,8 @@ fun GrowListAppTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.surface.toArgb()
+
+            window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

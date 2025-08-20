@@ -36,7 +36,7 @@ class PlantDetailViewModel(
 
     init {
         val plantDao = PlantDatabase.getDatabase(application).plantDao()
-        plantRepository = PlantRepository(plantDao)
+        plantRepository = PlantRepository(plantDao, application)
         fetchPlantDetails()
     }
 

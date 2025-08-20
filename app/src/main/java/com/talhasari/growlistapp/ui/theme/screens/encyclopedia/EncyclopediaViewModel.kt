@@ -29,7 +29,7 @@ class EncyclopediaViewModel(application: Application) : AndroidViewModel(applica
     init {
 
         val plantDao = PlantDatabase.getDatabase(application).plantDao()
-        plantRepository = PlantRepository(plantDao)
+        plantRepository = PlantRepository(plantDao, application)
         fetchPlantTypes()
     }
 

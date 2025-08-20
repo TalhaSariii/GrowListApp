@@ -19,7 +19,9 @@ data class Plant(
 
     val lastWateredDate: Long? = null,
 
-    val wateringIntervalDays: Int = 7
+    val wateringIntervalDays: Int = 7,
+
+    val userId: String
 )
 
 fun Plant.needsWatering(): Boolean {

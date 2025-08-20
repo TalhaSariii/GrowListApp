@@ -6,12 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.talhasari.growlistapp.data.local.db.PlantDatabase
 import com.talhasari.growlistapp.data.local.db.entity.Plant
 import com.talhasari.growlistapp.data.local.db.entity.needsWatering
+import com.talhasari.growlistapp.data.repository.AuthRepository
 import com.talhasari.growlistapp.data.repository.PlantRepository
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-
+import kotlinx.coroutines.flow.*
 
 data class DashboardUiState(
     val allPlants: List<Plant> = emptyList(),
@@ -22,18 +19,24 @@ data class DashboardUiState(
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
 
     private val plantRepository: PlantRepository
+    private val authRepository = AuthRepository(application)
     val uiState: StateFlow<DashboardUiState>
 
     init {
         val plantDao = PlantDatabase.getDatabase(application).plantDao()
-        plantRepository = PlantRepository(plantDao)
+        plantRepository = PlantRepository(plantDao, application)
+
+        val currentUserId = authRepository.currentUser?.uid
 
 
-        uiState = plantRepository.getAllLocalPlants()
+        val plantsFlow = currentUserId?.let { userId ->
+            plantRepository.getAllLocalPlants(userId)
+        } ?: flowOf(emptyList())
+
+        uiState = plantsFlow
             .map { plants ->
                 DashboardUiState(
                     allPlants = plants,
-
                     plantsToWater = plants.filter { it.needsWatering() },
                     isLoading = false
                 )

@@ -3,9 +3,8 @@ package com.talhasari.growlistapp.ui.theme
 import androidx.compose.ui.graphics.Color
 
 
-val SoftGreen = Color(0xFFADC698)
-val DarkGreen = Color(0xFF495D3B)
-val OffWhite = Color(0xFFFBFBFB)
-val LightGray = Color(0xFFF2F2F2)
-val TextColor = Color(0xFF333333)
-val TextColorVariant = Color(0xFF757575)
+val VibrantGreen = Color(0xFF15AC8A)
+val LightGreenBackground = Color(0xFFF0F7F4)
+val CardBackground = Color(0xFFFFFFFF)
+val DarkText = Color(0xFF223625)
+val LightText = Color(0xFF6A7D6D)

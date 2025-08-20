@@ -1,5 +1,6 @@
 package com.talhasari.growlistapp.data.repository
 
+import android.app.Application
 import com.google.firebase.firestore.FirebaseFirestore
 import com.talhasari.growlistapp.data.local.db.PlantDao
 import com.talhasari.growlistapp.data.local.db.entity.Plant
@@ -8,7 +9,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 
 class PlantRepository(
-    private val plantDao: PlantDao
+    private val plantDao: PlantDao,
+    application: Application
 ) {
 
 
@@ -26,8 +28,8 @@ class PlantRepository(
     }
 
 
-    fun getAllLocalPlants(): Flow<List<Plant>> {
-        return plantDao.getAllPlants()
+    fun getAllLocalPlants(userId: String): Flow<List<Plant>> {
+        return plantDao.getAllPlants(userId)
     }
 
 

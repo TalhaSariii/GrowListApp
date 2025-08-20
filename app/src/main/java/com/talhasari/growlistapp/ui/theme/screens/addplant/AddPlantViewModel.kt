@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.talhasari.growlistapp.data.local.db.PlantDatabase
 import com.talhasari.growlistapp.data.local.db.entity.Plant
 import com.talhasari.growlistapp.data.remote.PlantType
+import com.talhasari.growlistapp.data.repository.AuthRepository
 import com.talhasari.growlistapp.data.repository.PlantRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,12 +26,16 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
 
     private val plantRepository: PlantRepository
 
+    private val authRepository: AuthRepository
+
     private val _uiState = MutableStateFlow(AddPlantUiState())
     val uiState: StateFlow<AddPlantUiState> = _uiState.asStateFlow()
 
     init {
         val plantDao = PlantDatabase.getDatabase(application).plantDao()
-        plantRepository = PlantRepository(plantDao)
+        plantRepository = PlantRepository(plantDao, application)
+
+        authRepository = AuthRepository(application)
         fetchPlantTypes()
     }
 
@@ -56,6 +61,13 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun savePlant(name: String, type: String, location: String, imageUrl: String?) {
+
+        val currentUser = authRepository.currentUser
+        if (currentUser == null) {
+            _uiState.update { it.copy(userMessage = "Bitki eklemek için giriş yapmalısınız.") }
+            return
+        }
+
         if (name.isBlank() || type.isBlank() || location.isBlank()) {
             _uiState.update { it.copy(userMessage = "Lütfen tüm alanları doldurun.") }
             return
@@ -71,7 +83,8 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                 location = location,
                 acquisitionDate = System.currentTimeMillis(),
                 imageUrl = imageUrl,
-                wateringIntervalDays = interval
+                wateringIntervalDays = interval,
+                userId = currentUser.uid
             )
             plantRepository.insertLocalPlant(newPlant)
             _uiState.update { it.copy(userMessage = "Bitki başarıyla kaydedildi!") }

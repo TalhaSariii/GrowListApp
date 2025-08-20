@@ -9,7 +9,8 @@ import com.talhasari.growlistapp.data.local.db.entity.Plant
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface PlantDao{
+interface PlantDao {
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPlant(plant: Plant)
 
@@ -19,7 +20,7 @@ interface PlantDao{
     @Query("SELECT * FROM plants WHERE id = :plantId")
     suspend fun getPlantById(plantId: Int): Plant?
 
-    @Query("SELECT * FROM plants ORDER BY name ASC")
-    fun getAllPlants(): Flow<List<Plant>>
 
+    @Query("SELECT * FROM plants WHERE userId = :userId ORDER BY name ASC")
+    fun getAllPlants(userId: String): Flow<List<Plant>>
 }
