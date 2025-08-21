@@ -13,7 +13,7 @@ import com.talhasari.growlistapp.navigation.BottomNavItem
 import com.talhasari.growlistapp.ui.theme.screens.dashboard.DashboardScreen
 import com.talhasari.growlistapp.ui.theme.screens.encyclopedia.EncyclopediaScreen
 import com.talhasari.growlistapp.ui.theme.screens.profile.ProfileScreen
-
+import com.talhasari.growlistapp.ui.theme.screens.wishlist.WishlistScreen
 
 @Composable
 fun MainScreen(mainNavController: NavHostController) {
@@ -21,9 +21,11 @@ fun MainScreen(mainNavController: NavHostController) {
     val navBackStackEntry by bottomBarNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    // Navigasyon menüsüne Dilek Listesi eklendi
     val items = listOf(
         BottomNavItem.Dashboard,
         BottomNavItem.Encyclopedia,
+        BottomNavItem.Wishlist,
         BottomNavItem.Profile
     )
 
@@ -57,6 +59,8 @@ fun MainScreen(mainNavController: NavHostController) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen(navController = mainNavController) }
             composable(BottomNavItem.Encyclopedia.route) { EncyclopediaScreen(navController = mainNavController) }
             composable(BottomNavItem.Profile.route) { ProfileScreen(navController = mainNavController) }
+            // Dilek listesi ekranı için composable eklendi
+            composable(BottomNavItem.Wishlist.route) { WishlistScreen(navController = mainNavController) }
         }
     }
 }

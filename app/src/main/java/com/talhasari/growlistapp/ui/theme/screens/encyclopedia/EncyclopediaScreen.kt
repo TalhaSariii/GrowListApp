@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.talhasari.growlistapp.ui.theme.screens.dashboard.PlantTypeCard
+import com.talhasari.growlistapp.navigation.Screen
 import com.talhasari.growlistapp.ui.theme.screens.dashboard.PlantTypeCard
 
 @Composable
@@ -24,10 +24,8 @@ fun EncyclopediaScreen(
 ) {
     val uiState by encyclopediaViewModel.uiState.collectAsState()
 
-
     when (val state = uiState) {
         is EncyclopediaUiState.Loading -> {
-
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -36,7 +34,6 @@ fun EncyclopediaScreen(
             }
         }
         is EncyclopediaUiState.Success -> {
-
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
@@ -45,13 +42,12 @@ fun EncyclopediaScreen(
                 items(state.plantTypes) { plantType ->
 
                     PlantTypeCard(plantType = plantType) {
-
+                        navController.navigate(Screen.EncyclopediaDetail.createRoute(plantType.id))
                     }
                 }
             }
         }
         is EncyclopediaUiState.Error -> {
-
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
