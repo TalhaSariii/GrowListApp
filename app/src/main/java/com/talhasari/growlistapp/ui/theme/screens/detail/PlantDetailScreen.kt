@@ -62,7 +62,7 @@ fun PlantDetailScreen(
                     }
                 },
                 actions = {
-                    // Butonun onClick'i güncellendi
+
                     IconButton(onClick = { plantDetailViewModel.openEditDialog() }) {
                         Icon(Icons.Default.Edit, "Bitkiyi Düzenle")
                     }
@@ -104,7 +104,7 @@ fun PlantDetails(
     val plant = uiState.plant!!
     val scrollState = rememberScrollState()
 
-    // Diyalog penceresi burada state'e göre gösterilecek
+
     if (uiState.isEditDialogOpen) {
         EditPlantDialog(
             plant = plant,
@@ -121,7 +121,7 @@ fun PlantDetails(
     }
 }
 
-// YENİ EKLENDİ: Düzenleme için diyalog penceresi
+
 @Composable
 fun EditPlantDialog(
     plant: Plant,
@@ -179,6 +179,7 @@ fun Header(plant: Plant) {
             model = plant.imageUrl,
             contentDescription = plant.name,
             modifier = Modifier.fillMaxSize(),
+
             contentScale = ContentScale.Crop
         )
         Box(

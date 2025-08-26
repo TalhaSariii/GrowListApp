@@ -3,6 +3,9 @@ package com.talhasari.growlistapp.data.repository
 import android.app.Application
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.SetOptions
 import com.talhasari.growlistapp.data.local.db.PlantDao
 import com.talhasari.growlistapp.data.local.db.entity.Plant
 import com.talhasari.growlistapp.data.remote.PlantType
@@ -22,29 +25,26 @@ class PlantRepository(
 
 
 
-    suspend fun getPlantTypes(): List<PlantType> {
-        return try {
-            val snapshot = plantTypesCollection.get().await()
-
-            snapshot.documents.mapNotNull { document ->
-                document.toObject(PlantType::class.java)?.copy(id = document.id)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
+    suspend fun getPlantTypes(limit: Long, lastVisibleId: String? = null): QuerySnapshot {
+        val query = plantTypesCollection.orderBy("id").limit(limit)
+        return if (lastVisibleId == null) {
+            query.get().await()
+        } else {
+            query.startAfter(lastVisibleId).get().await()
         }
     }
 
 
     suspend fun getPlantTypeById(plantTypeId: String): PlantType? {
         return try {
-            val document = plantTypesCollection.document(plantTypeId).get().await()
-            document.toObject(PlantType::class.java)?.copy(id = document.id)
+            plantTypesCollection.document(plantTypeId).get().await().toObject(PlantType::class.java)
         } catch (e: Exception) {
             e.printStackTrace()
             null
         }
     }
+
+
 
     fun isPlantInWishlist(userId: String, plantTypeId: String): Flow<Boolean> = callbackFlow {
         val docRef = usersCollection.document(userId)
@@ -56,14 +56,12 @@ class PlantRepository(
     }
 
     suspend fun addToWishlist(userId: String, plantTypeId: String) {
-
-        usersCollection.document(userId).set(mapOf("wishlist" to FieldValue.arrayUnion(plantTypeId)), com.google.firebase.firestore.SetOptions.merge()).await()
+        usersCollection.document(userId).set(mapOf("wishlist" to FieldValue.arrayUnion(plantTypeId)), SetOptions.merge()).await()
     }
 
     suspend fun removeFromWishlist(userId: String, plantTypeId: String) {
         usersCollection.document(userId).update("wishlist", FieldValue.arrayRemove(plantTypeId)).await()
     }
-
 
     fun getWishlist(userId: String): Flow<List<PlantType>> = callbackFlow {
         val userDocRef = usersCollection.document(userId)
@@ -77,17 +75,13 @@ class PlantRepository(
             if (plantIds.isNullOrEmpty()) {
                 trySend(emptyList())
             } else {
-                plantTypesCollection.whereIn(com.google.firebase.firestore.FieldPath.documentId(), plantIds).get().addOnSuccessListener { plantSnapshots ->
-                    val plantTypes = plantSnapshots.documents.mapNotNull { document ->
-                        document.toObject(PlantType::class.java)?.copy(id = document.id)
-                    }
-                    trySend(plantTypes)
+                plantTypesCollection.whereIn("id", plantIds).get().addOnSuccessListener { plantSnapshots ->
+                    trySend(plantSnapshots.toObjects(PlantType::class.java))
                 }
             }
         }
         awaitClose { listener.remove() }
     }
-
 
     fun getAllLocalPlants(userId: String): Flow<List<Plant>> {
         return plantDao.getAllPlants(userId)

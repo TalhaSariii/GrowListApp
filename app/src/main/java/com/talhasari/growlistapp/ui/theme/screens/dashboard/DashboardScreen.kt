@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.talhasari.growlistapp.data.local.db.entity.Plant
 import com.talhasari.growlistapp.navigation.Screen
@@ -42,7 +43,7 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Benim Bitkilerim") },
-                // Üst barın arka planını da tema rengiyle uyumlu hale getirelim
+
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -123,13 +124,14 @@ fun SummaryCard(plantsToWater: List<Plant>) {
 
 @Composable
 fun PlantGridItem(plant: Plant, navController: NavController) {
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { navController.navigate(Screen.PlantDetail.createRoute(plant.id)) },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -142,13 +144,16 @@ fun PlantGridItem(plant: Plant, navController: NavController) {
                 contentAlignment = Alignment.Center
             ) {
                 if (plant.imageUrl != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(model = Uri.parse(plant.imageUrl)),
+
+                    AsyncImage(
+                        model = plant.imageUrl,
                         contentDescription = plant.name,
                         modifier = Modifier.fillMaxSize(),
+
                         contentScale = ContentScale.Crop
                     )
                 } else {
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -165,6 +170,9 @@ fun PlantGridItem(plant: Plant, navController: NavController) {
                 }
             }
         }
+
+
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = plant.name,
             style = MaterialTheme.typography.titleSmall,

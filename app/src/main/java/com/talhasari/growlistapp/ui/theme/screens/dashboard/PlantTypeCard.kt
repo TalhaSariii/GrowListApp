@@ -14,9 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.talhasari.growlistapp.R
 import com.talhasari.growlistapp.data.remote.PlantType
+import com.talhasari.growlistapp.ui.theme.screens.common.LeafLoadingIndicator
 
 @Composable
 fun PlantTypeCard(
@@ -34,7 +36,9 @@ fun PlantTypeCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
+
+
+            SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(plantType.imageUrl)
                     .crossfade(true)
@@ -43,8 +47,12 @@ fun PlantTypeCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(12.dp)),
+                loading = {
+                    LeafLoadingIndicator()
+                }
             )
+
 
             Spacer(modifier = Modifier.width(16.dp))
 

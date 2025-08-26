@@ -82,6 +82,7 @@ dependencies {
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
 
@@ -90,4 +91,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.6.8")
 
     implementation("com.google.android.gms:play-services-auth:21.2.0")
+    // Retrofit (API ile konuşmak için)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

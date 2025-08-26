@@ -37,11 +37,19 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         fetchPlantTypes()
     }
 
+
     private fun fetchPlantTypes() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val types = plantRepository.getPlantTypes()
-            _uiState.update { it.copy(allPlantTypes = types, filteredPlantTypes = types, isLoading = false) }
+            try {
+
+                val snapshot = plantRepository.getPlantTypes(limit = 10000L)
+                val types = snapshot.toObjects(PlantType::class.java)
+                _uiState.update { it.copy(allPlantTypes = types, filteredPlantTypes = emptyList(), isLoading = false) }
+            } catch (e: Exception) {
+
+                _uiState.update { it.copy(userMessage = "Bitki türleri yüklenemedi.", isLoading = false) }
+            }
         }
     }
 
@@ -78,16 +86,16 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
         }
 
         viewModelScope.launch {
-            // Yeni bitkiyi oluştururken seçilen türün tüm verilerini kopyala
+
             val newPlant = Plant(
                 name = name,
                 location = location,
-                imageUrl = imageUrl,
+                imageUrl = imageUrl ?: selectedPlantType.imageUrl,
                 userId = currentUser.uid,
                 acquisitionDate = System.currentTimeMillis(),
-                lastWateredDate = null, // Yeni eklenen bitki henüz sulanmadı
+                lastWateredDate = null,
 
-                // --- Seçilen PlantType'dan gelen özellikler ---
+              
                 type = selectedPlantType.name,
                 scientificName = selectedPlantType.scientificName,
                 generalInfo = selectedPlantType.generalInfo,
