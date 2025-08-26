@@ -15,7 +15,7 @@ import androidx.core.view.WindowCompat
 private val LightColorScheme = lightColorScheme(
     primary = VibrantGreen,
     secondary = VibrantGreen, // FAB butonu gibi ikincil elemanlar da canlı yeşil olsun
-    background = LightGreenBackground,
+    background = LightGrayBackground,
     surface = CardBackground, // Kartların arka planı
     onPrimary = Color.White,
     onSecondary = Color.White,

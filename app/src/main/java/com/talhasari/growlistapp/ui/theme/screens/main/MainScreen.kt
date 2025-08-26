@@ -59,7 +59,7 @@ fun MainScreen(mainNavController: NavHostController) {
             composable(BottomNavItem.Dashboard.route) { DashboardScreen(navController = mainNavController) }
             composable(BottomNavItem.Encyclopedia.route) { EncyclopediaScreen(navController = mainNavController) }
             composable(BottomNavItem.Profile.route) { ProfileScreen(navController = mainNavController) }
-            // Dilek listesi ekranı için composable eklendi
+
             composable(BottomNavItem.Wishlist.route) { WishlistScreen(navController = mainNavController) }
         }
     }

@@ -95,7 +95,7 @@ class AddPlantViewModel(application: Application) : AndroidViewModel(application
                 acquisitionDate = System.currentTimeMillis(),
                 lastWateredDate = null,
 
-              
+
                 type = selectedPlantType.name,
                 scientificName = selectedPlantType.scientificName,
                 generalInfo = selectedPlantType.generalInfo,
