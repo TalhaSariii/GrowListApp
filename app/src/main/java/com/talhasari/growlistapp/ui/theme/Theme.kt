@@ -1,6 +1,7 @@
 package com.talhasari.growlistapp.ui.theme
 
 import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
@@ -41,8 +42,9 @@ fun GrowListAppTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Durum çubuğunun rengini de ana arka plan rengimizle aynı yapalım
-            window.statusBarColor = colorScheme.background.toArgb()
+
+            window.statusBarColor = Color.Transparent.toArgb()
+
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

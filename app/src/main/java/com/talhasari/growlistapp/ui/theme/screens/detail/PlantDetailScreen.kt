@@ -36,7 +36,6 @@ fun PlantDetailScreen(
 ) {
     val uiState by plantDetailViewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(key1 = uiState.userMessage) {
         uiState.userMessage?.let {
@@ -51,36 +50,12 @@ fun PlantDetailScreen(
         }
     }
 
+    // DEĞİŞTİRİLDİ: Scaffold'un padding'i artık manuel olarak yönetiliyor.
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text(uiState.plant?.name ?: "Detaylar") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Geri")
-                    }
-                },
-                actions = {
-
-                    IconButton(onClick = { plantDetailViewModel.openEditDialog() }) {
-                        Icon(Icons.Default.Edit, "Bitkiyi Düzenle")
-                    }
-                    IconButton(onClick = { plantDetailViewModel.deletePlant() }) {
-                        Icon(Icons.Default.Delete, "Bitkiyi Sil")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding())
-        ) {
+        // Bu Box, Scaffold'un verdiği tüm padding'leri yok sayar ve ekranı kaplar.
+        Box(modifier = Modifier.fillMaxSize()) {
             when {
                 uiState.isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 uiState.error != null -> Text(
@@ -89,7 +64,13 @@ fun PlantDetailScreen(
                     modifier = Modifier.align(Alignment.Center)
                 )
                 uiState.plant != null -> {
-                    PlantDetails(uiState, plantDetailViewModel)
+                    // Ana içeriğimiz artık alt navigasyon çubuğu için gerekli boşluğu alıyor.
+                    PlantDetails(
+                        uiState = uiState,
+                        viewModel = plantDetailViewModel,
+                        navController = navController,
+                        modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+                    )
                 }
             }
         }
@@ -99,11 +80,12 @@ fun PlantDetailScreen(
 @Composable
 fun PlantDetails(
     uiState: PlantDetailUiState,
-    viewModel: PlantDetailViewModel
+    viewModel: PlantDetailViewModel,
+    navController: NavController,
+    modifier: Modifier = Modifier
 ) {
     val plant = uiState.plant!!
     val scrollState = rememberScrollState()
-
 
     if (uiState.isEditDialogOpen) {
         EditPlantDialog(
@@ -115,19 +97,231 @@ fun PlantDetails(
         )
     }
 
-    Column(modifier = Modifier.verticalScroll(scrollState)) {
-        Header(plant = plant)
+    // Dışarıdan gelen modifier (bottom padding içeren) buraya uygulanıyor.
+    Column(modifier = modifier.verticalScroll(scrollState)) {
+        HeaderWithActions(
+            plant = plant,
+            onBackClick = { navController.navigateUp() },
+            onEditClick = { viewModel.openEditDialog() },
+            onDeleteClick = { viewModel.deletePlant() }
+        )
         InfoTabs(uiState = uiState, viewModel = viewModel)
+    }
+}
+
+@Composable
+fun HeaderWithActions(
+    plant: Plant,
+    onBackClick: () -> Unit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(350.dp)
+    ) {
+        AsyncImage(
+            model = plant.imageUrl,
+            contentDescription = plant.name,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent, Color.Black.copy(alpha = 0.8f))
+                    )
+                )
+        )
+
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .statusBarsPadding() // Bu padding, butonu status bar'ın altına iter
+                .padding(start = 16.dp, top = 16.dp)
+                .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+        ) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Geri", tint = Color.White)
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(end = 16.dp, top = 16.dp)
+        ) {
+            IconButton(
+                onClick = { menuExpanded = true },
+                modifier = Modifier.background(Color.Black.copy(alpha = 0.3f), CircleShape)
+            ) {
+                Icon(Icons.Default.MoreVert, contentDescription = "Ayarlar", tint = Color.White)
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Bitkiyi Düzenle") },
+                    onClick = {
+                        onEditClick()
+                        menuExpanded = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) }
+                )
+                DropdownMenuItem(
+                    text = { Text("Bitkiyi Sil") },
+                    onClick = {
+                        onDeleteClick()
+                        menuExpanded = false
+                    },
+                    leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) }
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = plant.name,
+                style = MaterialTheme.typography.headlineLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = plant.scientificName,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White.copy(alpha = 0.8f)
+            )
+        }
     }
 }
 
 
 @Composable
-fun EditPlantDialog(
-    plant: Plant,
-    onDismiss: () -> Unit,
-    onSave: (String, String) -> Unit
-) {
+fun InfoTabs(uiState: PlantDetailUiState, viewModel: PlantDetailViewModel) {
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val tabs = listOf("Açıklama", "Bakım")
+
+    Column(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            containerColor = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.primary
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(title, fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal) }
+                )
+            }
+        }
+
+        Crossfade(targetState = selectedTabIndex, label = "tab-crossfade") { tabIndex ->
+            when (tabIndex) {
+                0 -> DescriptionTab(plant = uiState.plant!!)
+                1 -> CareTab(uiState = uiState, viewModel = viewModel)
+            }
+        }
+    }
+}
+
+@Composable
+fun DescriptionTab(plant: Plant) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        InfoDetailRow(icon = Icons.Default.Thermostat, label = "Sıcaklık", value = plant.temperatureRange)
+        InfoDetailRow(icon = Icons.Default.WbSunny, label = "Işık İhtiyacı", value = plant.lightRequirement)
+        InfoDetailRow(icon = Icons.Default.Opacity, label = "Nem İhtiyacı", value = plant.humidityRequirement)
+        Divider()
+        InfoDetailRow(icon = Icons.Default.Star, label = "Zorluk Seviyesi", value = plant.difficultyLevel)
+        InfoDetailRow(icon = Icons.Default.WaterDrop, label = "Sulama Sıklığı", value = "${plant.wateringIntervalDays} günde bir")
+        InfoDetailRow(icon = Icons.Default.FilterVintage, label = "Gübreleme", value = plant.fertilizationFrequency)
+        InfoDetailRow(icon = Icons.Default.ContentCut, label = "Budama", value = plant.pruningFrequency)
+        InfoDetailRow(icon = Icons.Default.Yard, label = "Saksı Değişimi", value = plant.repottingFrequency)
+
+        Text(
+            text = "Genel Bilgi",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+        Text(
+            text = plant.generalInfo,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+fun CareTab(uiState: PlantDetailUiState, viewModel: PlantDetailViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CareActionCard(
+            title = "Sulama",
+            timeRemaining = uiState.wateringTimeRemaining,
+            onActionClick = { viewModel.waterPlant() },
+            icon = Icons.Default.WaterDrop,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        CareActionCard(
+            title = "Gübreleme",
+            timeRemaining = uiState.fertilizingTimeRemaining,
+            onActionClick = { viewModel.fertilizePlant() },
+            icon = Icons.Default.FilterVintage,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    }
+}
+
+@Composable
+fun InfoDetailRow(icon: ImageVector, label: String, value: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(24.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun EditPlantDialog(plant: Plant, onDismiss: () -> Unit, onSave: (String, String) -> Unit) {
     var name by remember(plant.name) { mutableStateOf(plant.name) }
     var location by remember(plant.location) { mutableStateOf(plant.location) }
 
@@ -164,171 +358,6 @@ fun EditPlantDialog(
             }
         }
     )
-}
-
-
-@Composable
-fun Header(plant: Plant) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(300.dp),
-        contentAlignment = Alignment.BottomStart
-    ) {
-        AsyncImage(
-            model = plant.imageUrl,
-            contentDescription = plant.name,
-            modifier = Modifier.fillMaxSize(),
-
-            contentScale = ContentScale.Crop
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                        startY = 300f
-                    )
-                )
-        )
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = plant.name,
-                style = MaterialTheme.typography.headlineLarge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = plant.scientificName,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White.copy(alpha = 0.8f)
-            )
-        }
-    }
-}
-
-@Composable
-fun InfoTabs(uiState: PlantDetailUiState, viewModel: PlantDetailViewModel) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Açıklama", "Bakım")
-
-    Column {
-        TabRow(selectedTabIndex = selectedTabIndex) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(title) }
-                )
-            }
-        }
-
-        Crossfade(targetState = selectedTabIndex, label = "tab-crossfade") { tabIndex ->
-            when (tabIndex) {
-                0 -> DescriptionTab(plant = uiState.plant!!)
-                1 -> CareTab(uiState = uiState, viewModel = viewModel)
-            }
-        }
-    }
-}
-
-@Composable
-fun DescriptionTab(plant: Plant) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            InfoChip(icon = Icons.Default.Thermostat, label = "Sıcaklık", value = plant.temperatureRange)
-            InfoChip(icon = Icons.Default.WbSunny, label = "Işık", value = plant.lightRequirement)
-            InfoChip(icon = Icons.Default.Opacity, label = "Nem", value = plant.humidityRequirement)
-        }
-        Divider()
-        InfoDetailRow(icon = Icons.Default.Star, label = "Zorluk", value = plant.difficultyLevel)
-        InfoDetailRow(icon = Icons.Default.WaterDrop, label = "Sulama Sıklığı", value = "${plant.wateringIntervalDays} günde bir")
-        InfoDetailRow(icon = Icons.Default.FilterVintage, label = "Gübreleme", value = plant.fertilizationFrequency)
-        InfoDetailRow(icon = Icons.Default.ContentCut, label = "Budama", value = plant.pruningFrequency)
-        InfoDetailRow(icon = Icons.Default.Yard, label = "Saksı Değişimi", value = plant.repottingFrequency)
-        Divider()
-        Text(
-            text = "Genel Bilgi",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = plant.generalInfo,
-            style = MaterialTheme.typography.bodyLarge
-        )
-    }
-}
-
-@Composable
-fun CareTab(uiState: PlantDetailUiState, viewModel: PlantDetailViewModel) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        CareActionCard(
-            title = "Sulama",
-            timeRemaining = uiState.wateringTimeRemaining,
-            onActionClick = { viewModel.waterPlant() },
-            icon = Icons.Default.WaterDrop,
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-        )
-        CareActionCard(
-            title = "Gübreleme",
-            timeRemaining = uiState.fertilizingTimeRemaining,
-            onActionClick = { viewModel.fertilizePlant() },
-            icon = Icons.Default.FilterVintage,
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        )
-    }
-}
-
-
-@Composable
-fun InfoChip(icon: ImageVector, label: String, value: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(8.dp)
-    ) {
-        Icon(imageVector = icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(text = value, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
-        Text(text = label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
-fun InfoDetailRow(icon: ImageVector, label: String, value: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(text = label, style = MaterialTheme.typography.labelLarge)
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
 }
 
 @Composable
